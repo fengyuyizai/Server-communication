@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+    <h1>
+        首页
+    </h1>
+
+    <section class="wrapper">
+        <div class="polling-box">
+            <header class="title">短轮询</header>
+            <section class="body" id="short-polling">
+    
+            </section>
+        </div>
+    
+        <div class="polling-box">
+            <header class="title">长轮询</header>
+            <section class="body" id="long-polling">
+    
+            </section>
+        </div>
+    
+        <div class="polling-box">
+            <header class="title">sse</header>
+            <section class="body">
+    
+            </section>
+        </div>
+    
+        <div class="polling-box">
+            <header class="title">WebSocket</header>
+            <section class="body">
+                
+            </section>
+        </div>
+    </section>
+
+</body>
+
+</html>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script>
+
+    let updateTime = 0
+    function shortPolling () {
+        const timer = setTimeout(() => {
+            $.ajax({
+                url: 'http://127.0.0.1:3000/polling/shortPollingMsg',
+                type: 'GET',
+                data: {
+                    updateTime
+                },
+                success: function(res) {
+                    console.log(res)
+                    if (res.isUpdate) {
+                        updateTime = res.data.updateTime
+                        addTargetDom('shortPolling', res.data.data)
+                    }
+                    shortPolling()
+                },
+                error: function(err) {
+                    console.log(err)
+                }
+            })
+            clearTimeout(timer)
+        }, 5000)
+    }
+    // 监听短轮询
+    shortPolling()
+
+    function longPolling () {
+        $.ajax({
+            url: 'http://127.0.0.1:3000/polling/longPollingMsg',
+            type: 'GET',
+            data: {},
+            success: function(res) {
+                console.log('longPolling', res)
+                if(res.isUpdate) {
+                    addTargetDom('longPolling',  res.data.data)
+                }
+                longPolling()
+            },
+            error: function(err) {
+                console.log(err)
+            }
+        })
+    }
+
+    // 监听长轮询
+    // longPolling()
+
+    // 添加dom
+    function addTargetDom(target, textList) {
+        let dom = null 
+
+        switch (target) {
+            case 'shortPolling': dom = $('#short-polling')
+            break;
+            case 'longPolling': dom = $('#long-polling')
+            break;
+        }
+
+        let HTML = ''
+        textList.forEach((item) => {
+            HTML += `<p>${item.text}</p>`
+        })
+        // console.log(dom)
+        dom[0].innerHTML = HTML
+    }
+</script>
