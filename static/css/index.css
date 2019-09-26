@@ -3,6 +3,10 @@ html, body{
     margin: 0;
 }
 
+.add-value{
+    padding: 20px 10px;
+}
+
 ul, li{
     list-style: none;
 }

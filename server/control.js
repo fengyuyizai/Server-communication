@@ -12,6 +12,18 @@ const initState = {
 
 let idNum = 1
 
+const initStateWS = {
+    data: [
+        {
+            id: 1,
+            text: '这是消息'
+        }
+    ],
+    updateTime: (new Date()).getTime()
+}
+
+let idNumWS = 1
+
 const maxLongPollingTime = 5000 // ms
 
 /**
@@ -27,10 +39,26 @@ function insert (data) {
 }
 
 /**
+ * 插入WS
+ * @param {Object} data 
+ */
+function insertWS (data) {
+    data.id = ++idNumWS
+    initStateWS.data.push(data)
+    initStateWS.updateTime = (new Date()).getTime()
+
+    return initStateWS
+}
+
+/**
  * 
  */
 function getState () {
     return initState
+}
+
+function getStateWS () {
+    return initStateWS
 }
 
 function getMsg (req, res) {
@@ -74,7 +102,7 @@ function longPollingMsg (req, res) {
     // 监听最大时长外的改变
     timekeeping.start(() => {
         observer.remove('longPollingMsg', waitMsg.start)
-        console.log(observer.__message)
+        // console.log(observer.__message)
     })
 }
 
@@ -109,7 +137,7 @@ WaitMsg.prototype.SSEStart = function() {
         isUpdate: true,
         data: getState()
     }
-    // 此处要以data: 开头
+    // 此处要以data: 开头 '\n\n' 结尾
     this.res.write("data: " + JSON.stringify(resData) + '\n\n')
 }
 
@@ -121,7 +149,7 @@ function Timekeeping (res) {
 Timekeeping.prototype = {
     start: function(fn) {
         this.timer = setTimeout(() => {
-            console.log('response')
+            // console.log('response')
             this.res.send({
                 type: 'longPollingMsg',
                 isSussess: true,
@@ -181,12 +209,12 @@ function openSSEMsg(req, res) {
 // websocket连接
 function wsGetMsg (ws, req, msg) {
     // console.log(msg)
-    insert(JSON.parse(msg))
+    insertWS(JSON.parse(msg))
     const data = {
         type: 'websocket',
         isSussess: true,
         isUpdate: true,
-        data: getState()
+        data: getStateWS()
     }
     ws.send(JSON.stringify(data))
 }
