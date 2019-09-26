@@ -52,6 +52,7 @@ function addMsg (req, res) {
 
     // 发布更新
     observer.fire('longPollingMsg')
+    observer.fire('SSEMsg')
 
     res.send({
         isSussess
@@ -65,10 +66,10 @@ function addMsg (req, res) {
  */
 function longPollingMsg (req, res) {
     let timekeeping = new Timekeeping(res)
-    let waitMsg = new WaitMsg(res, timekeeping)
+    let waitMsg = new WaitMsg(res, 'longPollingMsg', timekeeping)
     
     // 监听最大时长内的改变
-    observer.regist('longPollingMsg', waitMsg.start)
+    observer.regist('longPollingMsg', waitMsg.start, waitMsg)
 
     // 监听最大时长外的改变
     timekeeping.start(() => {
@@ -77,27 +78,39 @@ function longPollingMsg (req, res) {
     })
 }
 
-function WaitMsg (res, timekeeping) {
+/**
+ * 等待函数
+ * @param {Object} res 
+ * @param {String} type 
+ * @param {Function} timekeeping 
+ */
+function WaitMsg (res, type, timekeeping) {
     this.res = res
-    this.timekeeping = timekeeping
+    this.timekeeping = timekeeping || false
+    this.type = type
 }
 
-WaitMsg.prototype = {
-    start: function() {
-        // 停止计时器
-        this.timekeeping.end()
-        // 去除监听
-        observer.remove('longPollingMsg', this)
-
-        this.res.send({
-            type: 'longPollingMsg',
-            isSussess: true,
-            isUpdate: true,
-            data: getState()
-        })
-    
-        return
+WaitMsg.prototype.start = function() {
+    // 停止计时器
+    this.timekeeping && this.timekeeping.end()
+    // 去除监听
+    this.type !== 'SSEMsg' && observer.remove(this.type, this)
+    this.res.send({
+        type: this.type,
+        isSussess: true,
+        isUpdate: true,
+        data: getState()
+    })
+}
+WaitMsg.prototype.SSEStart = function() {
+    const resData = {
+        type: this.type,
+        isSussess: true,
+        isUpdate: true,
+        data: getState()
     }
+    // 此处要以data: 开头
+    this.res.write("data: " + JSON.stringify(resData) + '\n\n')
 }
 
 function Timekeeping (res) {
@@ -153,10 +166,30 @@ function shortPollingMsg (req, res) {
     }
 }
 
+// 建立SSE连接
+function openSSEMsg(req, res) {
+    res.set("Content-Type", "text/event-stream")
+    res.set("Cache-Control", "no-cache")
+    res.set("Connection", "keep-alive")
+    // console.log('建立连接')
+    
+    let waitMsg = new WaitMsg(res, 'SSEMsg')
+    observer.regist('SSEMsg', waitMsg.SSEStart, waitMsg)
+
+}
+
+// websocket连接
+function wsGetMsg (ws, msg) {
+    console.log(msg)
+    ws.send(msg)
+}
+
 module.exports = {
     getMsg,
     addMsg,
     longPollingMsg,
-    shortPollingMsg
+    shortPollingMsg,
+    openSSEMsg,
+    wsGetMsg
 }
 

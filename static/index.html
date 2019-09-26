@@ -14,6 +14,12 @@
         首页
     </h1>
 
+    <div>
+        <span>添加数据</span>
+        <input type="text" id="value">
+        <button onclick="addText()">添加</button>
+    </div>
+
     <section class="wrapper">
         <div class="polling-box">
             <header class="title">短轮询</header>
@@ -31,14 +37,14 @@
     
         <div class="polling-box">
             <header class="title">sse</header>
-            <section class="body">
+            <section class="body" id="sse">
     
             </section>
         </div>
     
         <div class="polling-box">
             <header class="title">WebSocket</header>
-            <section class="body">
+            <section class="body" id="webSocket">
                 
             </section>
         </div>
@@ -49,6 +55,54 @@
 </html>
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <script>
+    const socket = new WebSocket('ws://localhost:3000/ws/getMsg');
+    init()
+
+    function init() {
+        $.ajax({
+            url: 'http://127.0.0.1:3000/polling/getMsg',
+            type: 'GET',
+            success: function(res) {
+                console.log(res)
+                addTargetDom('shortPolling', res.data)
+                addTargetDom('longPolling',  res.data)
+                addTargetDom('sse',  res.data)
+                addTargetDom('webSocket',  res.data)
+
+                // 监听短轮询
+                // shortPolling()
+                // 监听长轮询
+                // longPolling()
+                // 监听sse
+                // openSSE()
+                // 监听websocket
+            },
+            error: function(err) {
+                console.log(err)
+            }
+        })
+    }
+
+    function addText () {
+        const addInput = document.getElementById('value')
+
+        const data = {
+            text: addInput.value
+        }
+
+        // 发送websocket请求
+        socket.send(data)
+
+        // 发送http请求
+        $.ajax({
+            url: 'http://127.0.0.1:3000/addMsg',
+            type: 'POST',
+            data: data,
+            success: function(res) {
+                console.log(res)
+            }
+        })
+    }
 
     let updateTime = 0
     function shortPolling () {
@@ -74,8 +128,7 @@
             clearTimeout(timer)
         }, 5000)
     }
-    // 监听短轮询
-    shortPolling()
+    
 
     function longPolling () {
         $.ajax({
@@ -83,7 +136,7 @@
             type: 'GET',
             data: {},
             success: function(res) {
-                console.log('longPolling', res)
+                // console.log('longPolling', res)
                 if(res.isUpdate) {
                     addTargetDom('longPolling',  res.data.data)
                 }
@@ -95,8 +148,42 @@
         })
     }
 
-    // 监听长轮询
-    // longPolling()
+
+    // 打开sse连接
+    function openSSE() {
+        if (window.hasOwnProperty('EventSource')) {
+            var source = new EventSource('http://127.0.0.1:3000/polling/openSSEMsg')
+            source.onopen = function(event) {
+                console.log(event)
+            }
+
+            source.onmessage = function(event) {
+                const data = JSON.parse(event.data)
+                const list = data.data.data
+                // console.log(list)
+                addTargetDom('sse', list)
+            }
+
+            source.onerror = function(error) {
+                console.log(error)
+                // source.close()
+            }
+        }
+    }
+
+    /**
+     * 连接websocket
+     * 
+     */
+    function connectWs () {
+        socket.addEventListener('open', function (event) {
+            console.log('socket is open')
+        });
+
+        socket.addEventListener('message', function (event) {
+            console.log('Message from server', event.data);
+        });
+    }
 
     // 添加dom
     function addTargetDom(target, textList) {
@@ -107,6 +194,10 @@
             break;
             case 'longPolling': dom = $('#long-polling')
             break;
+            case 'sse': dom = $('#sse')
+            break;
+            case 'webSocket': dom = $('#webSocket')
+            break;
         }
 
         let HTML = ''
@@ -116,4 +207,5 @@
         // console.log(dom)
         dom[0].innerHTML = HTML
     }
+
 </script>

@@ -1,14 +1,17 @@
 import express from 'express'
-import { router } from './server'
+import { polling, add, webSocket } from './server'
 import bodyParser from "body-parser";
 
 const app = express()
+
 
 app.use(express.static('static'));
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: false}))
 
-app.use('/polling', router)
+app.use('/polling', polling)
+app.use('/ws', webSocket)
+app.use('/', add)
 
 app.listen(3000, function() {
     console.log('listen on port 3000')

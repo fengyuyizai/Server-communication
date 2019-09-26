@@ -1,14 +1,18 @@
-function regist (type, fn) {
+function regist (type, fn, that = null) {
     const __message = this.__message
+    const __thatTotal = this.__thatTotal
     if (typeof __message[type] === 'undefined') {
         __message[type] = [fn]
+        __thatTotal[type] = [that]
     } else {
         __message[type].push(fn)
+        __thatTotal[type].push(that)
     }
 }
 
 function fire (type, arg = {}) {
     const __message = this.__message
+    const __thatTotal = this.__thatTotal
     if (!__message[type]) return
 
     let events = {
@@ -18,23 +22,27 @@ function fire (type, arg = {}) {
     
     const len = __message[type].length
     for (let i = 0; i < len; i++) {
-        __message[type][i].call(this, events)
+        __message[type][i].call(__thatTotal[type][i], events)
     }
 }
 
 function remove(type, fn) {
     const __message = this.__message
+    const __thatTotal = this.__thatTotal
     if (__message[type] instanceof Array) {
         let i = __message[type].length - 1
         for (; i >= 0; i--) {
-            __message[type][i] === fn &&
-            __message[type].splice(i, 1)
+            if (__message[type][i] === fn) {
+                __message[type].splice(i, 1)
+                __thatTotal[type].splice(i, 1)
+            }
         }
     }
 }
 
 const Observer = function() {
     this.__message = {}
+    this.__thatTotal = {}
 }
 
 Observer.prototype = {
