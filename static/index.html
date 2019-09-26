@@ -70,12 +70,13 @@
                 addTargetDom('webSocket',  res.data)
 
                 // 监听短轮询
-                // shortPolling()
+                shortPolling()
                 // 监听长轮询
-                // longPolling()
+                longPolling()
                 // 监听sse
-                // openSSE()
+                openSSE()
                 // 监听websocket
+                openWs()
             },
             error: function(err) {
                 console.log(err)
@@ -90,8 +91,12 @@
             text: addInput.value
         }
 
-        // 发送websocket请求
-        socket.send(data)
+        // 发送websocket请求 -- 只能发送  
+        // USVString（文本字符串）
+        // ArrayBuffer（数组对象二进制数据）
+        // Blob（二进制）
+        // ArrayBufferView（二进制帧）
+        socket.send(JSON.stringify(data))
 
         // 发送http请求
         $.ajax({
@@ -175,13 +180,16 @@
      * 连接websocket
      * 
      */
-    function connectWs () {
+    function openWs () {
         socket.addEventListener('open', function (event) {
             console.log('socket is open')
         });
 
         socket.addEventListener('message', function (event) {
-            console.log('Message from server', event.data);
+            console.log(JSON.parse(event.data));
+            const data = JSON.parse(event.data)
+            const list = data.data.data
+            addTargetDom('webSocket', list)
         });
     }
 

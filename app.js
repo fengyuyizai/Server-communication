@@ -1,9 +1,11 @@
 import express from 'express'
 import { polling, add, webSocket } from './server'
 import bodyParser from "body-parser";
+import expressWs from "express-ws"
 
 const app = express()
 
+expressWs(app);
 
 app.use(express.static('static'));
 app.use(bodyParser.json())

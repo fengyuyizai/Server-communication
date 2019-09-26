@@ -6,7 +6,7 @@ const router = express.Router();
 expressWs(express())
 
 router.ws('/getMsg', function (ws, req) {
-    ws.on('message', wsGetMsg.bind(this, ws))
+    ws.on('message', wsGetMsg.bind(this, ws, req))
 })
 
 module.exports = router

@@ -179,9 +179,16 @@ function openSSEMsg(req, res) {
 }
 
 // websocket连接
-function wsGetMsg (ws, msg) {
-    console.log(msg)
-    ws.send(msg)
+function wsGetMsg (ws, req, msg) {
+    // console.log(msg)
+    insert(JSON.parse(msg))
+    const data = {
+        type: 'websocket',
+        isSussess: true,
+        isUpdate: true,
+        data: getState()
+    }
+    ws.send(JSON.stringify(data))
 }
 
 module.exports = {
