@@ -10,19 +10,23 @@
 ####短轮询
 -------------
 
-
+![](https://github.com/fengyuyizai/Server-communication/blob/master/img/short.png)
 
 
 ####长轮询
 -------------
 
+![](https://github.com/fengyuyizai/Server-communication/blob/master/img/long.png)
 
 ####SSE
 -------------
 
+![](https://github.com/fengyuyizai/Server-communication/blob/master/img/sse.png)
 
 ####WebSocket
 -------------
+
+![](https://github.com/fengyuyizai/Server-communication/blob/master/img/websocket.png)
 
 ###代码实现
 
